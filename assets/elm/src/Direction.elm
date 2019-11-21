@@ -1,4 +1,7 @@
-module Direction exposing (Direction(..))
+module Direction exposing
+    ( Direction(..)
+    , Validity(..)
+    )
 
 -- TYPES
 
@@ -8,3 +11,8 @@ type Direction
     | Right
     | Down
     | Left
+
+
+type Validity
+    = Invalid
+    | Valid

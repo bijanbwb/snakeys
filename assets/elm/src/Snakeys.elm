@@ -5,7 +5,7 @@ module Snakeys exposing (main)
 import Browser
 import Browser.Events
 import Color
-import Direction
+import Direction exposing (Direction)
 import Html exposing (Html)
 import Html.Attributes
 import Item exposing (Item)
@@ -88,6 +88,38 @@ update msg model =
             )
 
 
+checkDirectionChange : Direction -> Snake -> Direction.Validity
+checkDirectionChange newDirection snake =
+    case snake.direction of
+        Direction.Up ->
+            if newDirection /= Direction.Down then
+                Direction.Valid
+
+            else
+                Direction.Invalid
+
+        Direction.Right ->
+            if newDirection /= Direction.Left then
+                Direction.Valid
+
+            else
+                Direction.Invalid
+
+        Direction.Down ->
+            if newDirection /= Direction.Up then
+                Direction.Valid
+
+            else
+                Direction.Invalid
+
+        Direction.Left ->
+            if newDirection /= Direction.Right then
+                Direction.Valid
+
+            else
+                Direction.Invalid
+
+
 playerFoundItem : Item -> Player -> Bool
 playerFoundItem item player =
     let
@@ -144,16 +176,36 @@ updateSnakeDirection : Maybe String -> Snake -> Snake
 updateSnakeDirection maybeKeyPress snake =
     case maybeKeyPress of
         Just "ArrowUp" ->
-            { snake | direction = Direction.Up }
+            case checkDirectionChange Direction.Up snake of
+                Direction.Valid ->
+                    { snake | direction = Direction.Up }
+
+                Direction.Invalid ->
+                    snake
 
         Just "ArrowRight" ->
-            { snake | direction = Direction.Right }
+            case checkDirectionChange Direction.Right snake of
+                Direction.Valid ->
+                    { snake | direction = Direction.Right }
+
+                Direction.Invalid ->
+                    snake
 
         Just "ArrowDown" ->
-            { snake | direction = Direction.Down }
+            case checkDirectionChange Direction.Down snake of
+                Direction.Valid ->
+                    { snake | direction = Direction.Down }
+
+                Direction.Invalid ->
+                    snake
 
         Just "ArrowLeft" ->
-            { snake | direction = Direction.Left }
+            case checkDirectionChange Direction.Left snake of
+                Direction.Valid ->
+                    { snake | direction = Direction.Left }
+
+                Direction.Invalid ->
+                    snake
 
         _ ->
             snake
