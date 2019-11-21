@@ -4,7 +4,7 @@ module Snakeys exposing (main)
 
 import Browser
 import Browser.Events
-import Color
+import Color exposing (Color)
 import Direction exposing (Direction)
 import Html exposing (Html)
 import Html.Attributes
@@ -167,6 +167,7 @@ updatePlayerSnake maybeKeyPress player =
         | snake =
             player.snake
                 |> (updateSnakeHead
+                        >> updateSnakeTail
                         >> updateSnakeDirection maybeKeyPress
                    )
     }
@@ -213,11 +214,14 @@ updateSnakeDirection maybeKeyPress snake =
 
 updateSnakeHead : Snake -> Snake
 updateSnakeHead snake =
-    { snake | head = updateSnakePosition snake }
+    { snake | head = updateSnakeHeadPosition snake }
 
+updateSnakeTail : Snake -> Snake
+updateSnakeTail snake =
+    { snake | tail = updateSnakeTailPosition snake }
 
-updateSnakePosition : Snake -> Position
-updateSnakePosition { direction, head } =
+updateSnakeHeadPosition : Snake -> Position
+updateSnakeHeadPosition { direction, head } =
     case direction of
         Direction.Up ->
             { head | y = head.y - 1 }
@@ -231,6 +235,15 @@ updateSnakePosition { direction, head } =
         Direction.Left ->
             { head | x = head.x - 1 }
 
+updateSnakeTailPosition : Snake -> List Position
+updateSnakeTailPosition { direction, tail } =
+    List.map updateSnakeTailSegment tail
+
+updateSnakeTailSegment : Position -> Position
+updateSnakeTailSegment tailSegment =
+    { x = tailSegment.x + 1
+    , y = tailSegment.y + 1
+    }
 
 
 -- SUBSCRIPTIONS
@@ -258,7 +271,7 @@ view : Model -> Html a
 view model =
     Html.div []
         [ Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
-            [ Html.text "Snakey" ]
+            [ Html.text "Snakeys" ]
         , playersList model.players
         , gameWindow model.items model.players model.window
         ]
@@ -350,15 +363,33 @@ viewItem item =
 
 viewPlayers : List Player -> List (Svg msg)
 viewPlayers players =
-    List.map viewPlayer players
+    List.map viewPlayerSnake players
 
 
-viewPlayer : Player -> Svg msg
-viewPlayer player =
+viewPlayerSnake : Player -> Svg msg
+viewPlayerSnake player =
+    player
+        |> viewSnakeHead
+        |> List.singleton
+        |> List.append (viewSnakeTail player)
+        |> Svg.g []
+
+
+viewSnakeHead : Player -> Svg msg
+viewSnakeHead { snake } =
+    viewSnakeSegment snake.color snake.head
+
+viewSnakeTail : Player -> List (Svg msg)
+viewSnakeTail { snake } =
+    List.map (viewSnakeSegment snake.color) snake.tail
+
+
+viewSnakeSegment : Color -> Position -> Svg msg
+viewSnakeSegment color snakeSegment =
     rect
-        [ fill <| Color.toTailwindHex player.color
-        , x <| String.fromInt player.snake.head.x
-        , y <| String.fromInt player.snake.head.y
+        [ fill <| Color.toTailwindHex color
+        , x <| String.fromInt snakeSegment.x
+        , y <| String.fromInt snakeSegment.y
         , width "10"
         , height "10"
         ]

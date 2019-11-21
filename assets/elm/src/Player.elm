@@ -40,7 +40,7 @@ playerData =
             { color = Color.Blue
             , direction = Direction.Right
             , head = { x = 100, y = 100 }
-            , tail = []
+            , tail = List.range 1 8 |> List.map (\n -> { x = ((negate n) * 10), y = 0})
             }
       }
     ]
