@@ -1,23 +1,16 @@
 module Player exposing
-    ( Direction(..)
-    , Player
+    ( Player
     , playerData
     )
 
 -- IMPORTS
 
 import Color exposing (Color)
+import Direction exposing (Direction)
 
 
 
 -- TYPES
-
-
-type Direction
-    = North
-    | East
-    | South
-    | West
 
 
 type alias Player =
@@ -42,7 +35,7 @@ playerData : List Player
 playerData =
     [ { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-U03CTQU93-c88640d8b72a-512"
       , color = Color.Blue
-      , direction = East
+      , direction = Direction.Right
       , height = 10
       , id = 1
       , name = "Bijan"
@@ -53,7 +46,7 @@ playerData =
       }
     , { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-UENQJLJTS-83d6e8679c9d-512"
       , color = Color.Red
-      , direction = East
+      , direction = Direction.Right
       , height = 10
       , id = 2
       , name = "Nick"
@@ -64,7 +57,7 @@ playerData =
       }
     , { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-UEBNS4XTL-1f772791e268-512"
       , color = Color.Green
-      , direction = East
+      , direction = Direction.Right
       , height = 10
       , id = 3
       , name = "Kameron"

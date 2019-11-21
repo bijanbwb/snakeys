@@ -5,6 +5,7 @@ module Snakeys exposing (main)
 import Browser
 import Browser.Events
 import Color
+import Direction
 import Html exposing (Html)
 import Html.Attributes
 import Json.Decode
@@ -146,57 +147,35 @@ updateItemPosition item =
 
 updatePlayerDirection : Maybe String -> Player -> Player
 updatePlayerDirection maybeKeyPress player =
-    case ( player.direction, maybeKeyPress ) of
-        ( Player.North, Just "ArrowLeft" ) ->
-            { player | direction = Player.West }
+    case maybeKeyPress of
+        Just "ArrowUp" ->
+            { player | direction = Direction.Up }
 
-        ( Player.North, Just "ArrowRight" ) ->
-            { player | direction = Player.East }
+        Just "ArrowRight" ->
+            { player | direction = Direction.Right }
 
-        ( Player.North, _ ) ->
+        Just "ArrowDown" ->
+            { player | direction = Direction.Down }
+
+        Just "ArrowLeft" ->
+            { player | direction = Direction.Left }
+
+        _ ->
             player
-
-        ( Player.East, Just "ArrowLeft" ) ->
-            { player | direction = Player.North }
-
-        ( Player.East, Just "ArrowRight" ) ->
-            { player | direction = Player.South }
-
-        ( Player.East, _ ) ->
-            player
-
-        ( Player.South, Just "ArrowLeft" ) ->
-            { player | direction = Player.East }
-
-        ( Player.South, Just "ArrowRight" ) ->
-            { player | direction = Player.West }
-
-        ( Player.South, _ ) ->
-            player
-
-        ( Player.West, Just "ArrowLeft" ) ->
-            { player | direction = Player.South }
-
-        ( Player.West, Just "ArrowRight" ) ->
-            { player | direction = Player.North }
-
-        ( Player.West, _ ) ->
-            player
-
 
 updatePlayerPosition : Player -> Player
 updatePlayerPosition player =
     case player.direction of
-        Player.North ->
+        Direction.Up ->
             { player | y = player.y - 1 }
 
-        Player.East ->
+        Direction.Right ->
             { player | x = player.x + 1 }
 
-        Player.South ->
+        Direction.Down ->
             { player | y = player.y + 1 }
 
-        Player.West ->
+        Direction.Left ->
             { player | x = player.x - 1 }
 
 
@@ -208,16 +187,16 @@ updatePlayerScore player =
 updatePlayerSize : Player -> Player
 updatePlayerSize player =
     case player.direction of
-        Player.North ->
+        Direction.Up ->
             { player | height = player.height + 1 }
 
-        Player.East ->
+        Direction.Right ->
             { player | width = player.width + 1 }
 
-        Player.South ->
+        Direction.Down ->
             { player | height = player.height + 1 }
 
-        Player.West ->
+        Direction.Left ->
             { player | width = player.width + 1 }
 
 
