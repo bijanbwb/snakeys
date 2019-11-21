@@ -149,8 +149,7 @@ keyDecoder =
 view : Model -> Html a
 view model =
     Html.div []
-        [ tailwind
-        , Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
+        [ Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
             [ Html.text "Snakey" ]
         , playersList model.players
         , gameWindow model.players model.window
@@ -231,18 +230,5 @@ viewPlayer player =
         , y <| String.fromInt player.y
         , width "10"
         , height "10"
-        ]
-        []
-
-
-
--- HELPERS
-
-
-tailwind : Html a
-tailwind =
-    Html.node "link"
-        [ Html.Attributes.rel "stylesheet"
-        , Html.Attributes.href "https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
         ]
         []
