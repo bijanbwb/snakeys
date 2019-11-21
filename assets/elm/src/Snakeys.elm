@@ -36,7 +36,8 @@ type alias Model =
 
 
 type alias Player =
-    { color : String
+    { avatarUrl : String
+    , color : String
     , id : Int
     , name : String
     , score : Int
@@ -58,14 +59,16 @@ initialModel : Model
 initialModel =
     { playerKeyPress = Nothing
     , players =
-        [ { color = "blue"
+        [ { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-U03CTQU93-c88640d8b72a-512"
+          , color = "blue"
           , id = 1
           , name = "Bijan"
           , score = 0
           , x = 100
           , y = 100
           }
-        , { color = "red"
+        , { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-UENQJLJTS-83d6e8679c9d-512"
+          , color = "red"
           , id = 1
           , name = "Nick"
           , score = 0
@@ -174,6 +177,10 @@ playersListItem player =
     Html.li []
         [ Html.span [ Html.Attributes.class colorBoxClasses ]
             []
+        , Html.span [ Html.Attributes.class "inline-block mx-2" ]
+            [ Html.img
+                [ Html.Attributes.class "h-4 w-4", Html.Attributes.src player.avatarUrl ] []
+            ]
         , Html.span []
             [ Html.text player.name ]
         , Html.span [ Html.Attributes.class "px-2" ]
