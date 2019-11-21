@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# script/server: Start the Phoenix server.
+# scripts/server: Start the Phoenix server.
 
 set -e
 

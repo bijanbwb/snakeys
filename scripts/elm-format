@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# scripts/elm-format: Run Elm formatter for all Elm code.
+
+set -e
+
+elm-format assets/elm/src/* --yes

@@ -144,7 +144,12 @@ updateItems model items =
 
 updateItemPosition : Item -> Item
 updateItemPosition item =
-    { item | position = { x = item.position.x + 1, y = item.position.y + 1 } }
+    -- { item | position =
+    --     { x = item.position.x + 1
+    --     , y = item.position.y + 1
+    --     }
+    -- }
+    { item | position = item.position }
 
 
 updatePlayerScore : Player -> Player
@@ -216,34 +221,48 @@ updateSnakeHead : Snake -> Snake
 updateSnakeHead snake =
     { snake | head = updateSnakeHeadPosition snake }
 
+
 updateSnakeTail : Snake -> Snake
 updateSnakeTail snake =
     { snake | tail = updateSnakeTailPosition snake }
+
 
 updateSnakeHeadPosition : Snake -> Position
 updateSnakeHeadPosition { direction, head } =
     case direction of
         Direction.Up ->
-            { head | y = head.y - 1 }
+            { head | y = head.y - 2 }
 
         Direction.Right ->
-            { head | x = head.x + 1 }
+            { head | x = head.x + 2 }
 
         Direction.Down ->
-            { head | y = head.y + 1 }
+            { head | y = head.y + 2 }
 
         Direction.Left ->
-            { head | x = head.x - 1 }
+            { head | x = head.x - 2 }
+
 
 updateSnakeTailPosition : Snake -> List Position
 updateSnakeTailPosition { direction, tail } =
-    List.map updateSnakeTailSegment tail
+    List.map (updateSnakeTailSegment direction) tail
 
-updateSnakeTailSegment : Position -> Position
-updateSnakeTailSegment tailSegment =
-    { x = tailSegment.x + 1
-    , y = tailSegment.y + 1
-    }
+
+updateSnakeTailSegment : Direction -> Position -> Position
+updateSnakeTailSegment direction tailSegment =
+    case direction of
+        Direction.Up ->
+            { tailSegment | y = tailSegment.y - 2 }
+
+        Direction.Right ->
+            { tailSegment | x = tailSegment.x + 2 }
+
+        Direction.Down ->
+            { tailSegment | y = tailSegment.y + 2 }
+
+        Direction.Left ->
+            { tailSegment | x = tailSegment.x - 2 }
+
 
 
 -- SUBSCRIPTIONS
@@ -378,6 +397,7 @@ viewPlayerSnake player =
 viewSnakeHead : Player -> Svg msg
 viewSnakeHead { snake } =
     viewSnakeSegment snake.color snake.head
+
 
 viewSnakeTail : Player -> List (Svg msg)
 viewSnakeTail { snake } =
