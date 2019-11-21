@@ -38,7 +38,7 @@ type alias Item =
 
 
 type alias Model =
-    { item : Item
+    { items : List Item
     , playerKeyPress : Maybe String
     , players : List Player
     , window : Window
@@ -56,11 +56,16 @@ type alias Window =
 
 initialModel : Model
 initialModel =
-    { item =
-        { color = "pink"
-        , x = 400
-        , y = 400
-        }
+    { items =
+        [ { color = "pink"
+          , x = 400
+          , y = 400
+          }
+        , { color = "yellow"
+          , x = 500
+          , y = 500
+          }
+        ]
     , playerKeyPress = Nothing
     , players = Player.playerData
     , window =
@@ -94,14 +99,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GameLoop frame ->
-            let
-                updatedPlayers =
-                    model.players
-                        |> List.map (updatePlayerDirection model.playerKeyPress)
-                        |> List.map updatePlayerPosition
-                        |> List.map (updatePlayerScore model.item)
-            in
-            ( { model | players = updatedPlayers }, Cmd.none )
+            ( updateGameState model
+            , Cmd.none
+            )
 
         PlayerPressedKeyDown key ->
             ( { model | playerKeyPress = Just key }
@@ -116,7 +116,32 @@ update msg model =
 
 playerFoundItem : Item -> Player -> Bool
 playerFoundItem item player =
-    player.x > item.x
+    let
+        offset =
+            10
+    in
+    (player.x == item.x + offset) || (player.x == item.x - offset)
+
+
+updateGameState : Model -> Model
+updateGameState model =
+    { model
+        | items = updateItems model model.items
+        , players = updatePlayers model model.players
+    }
+
+
+updateItems : Model -> List Item -> List Item
+updateItems model items =
+    List.map updateItemPosition items
+
+
+updateItemPosition : Item -> Item
+updateItemPosition item =
+    { item
+        | x = item.x + 1
+        , y = item.y - 1
+    }
 
 
 updatePlayerDirection : Maybe String -> Player -> Player
@@ -175,17 +200,36 @@ updatePlayerPosition player =
             { player | x = player.x - 1 }
 
 
-updatePlayerScore : Item -> Player -> Player
-updatePlayerScore item player =
-    case playerFoundItem item player of
-        True ->
-            { player
-                | score = player.score + 1
-                , width = player.width + 1
-            }
+updatePlayerScore : Player -> Player
+updatePlayerScore player =
+    { player | score = player.score + 1 }
 
-        False ->
-            player
+
+updatePlayerSize : Player -> Player
+updatePlayerSize player =
+    case player.direction of
+        Player.North ->
+            { player | height = player.height + 1 }
+
+        Player.East ->
+            { player | width = player.width + 1 }
+
+        Player.South ->
+            { player | height = player.height + 1 }
+
+        Player.West ->
+            { player | width = player.width + 1 }
+
+
+updatePlayers : Model -> List Player -> List Player
+updatePlayers model players =
+    players
+        |> List.map
+            (updatePlayerDirection model.playerKeyPress
+                >> updatePlayerPosition
+                >> updatePlayerScore
+                >> updatePlayerSize
+            )
 
 
 
@@ -216,7 +260,7 @@ view model =
         [ Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
             [ Html.text "Snakey" ]
         , playersList model.players
-        , gameWindow model.item model.players model.window
+        , gameWindow model.items model.players model.window
         ]
 
 
@@ -250,8 +294,8 @@ playersListItem player =
         ]
 
 
-gameWindow : Item -> List Player -> Window -> Svg a
-gameWindow item players window =
+gameWindow : List Item -> List Player -> Window -> Svg a
+gameWindow items players window =
     let
         viewBoxString =
             [ window.x
@@ -270,7 +314,7 @@ gameWindow item players window =
             ]
             ([ viewGameWindow window ]
                 ++ viewPlayers players
-                ++ [ viewItem item ]
+                ++ viewItems items
             )
         ]
 
@@ -285,6 +329,11 @@ viewGameWindow window =
         , height <| String.fromInt window.height
         ]
         []
+
+
+viewItems : List Item -> List (Svg msg)
+viewItems itesm =
+    List.map viewItem itesm
 
 
 viewItem : Item -> Svg msg
