@@ -7,6 +7,7 @@ import Browser.Events
 import Html exposing (Html)
 import Html.Attributes
 import Json.Decode
+import Player exposing (Player)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
@@ -28,13 +29,6 @@ main =
 -- MODEL
 
 
-type Direction
-    = North
-    | East
-    | South
-    | West
-
-
 type alias Item =
     { color : String
     , x : Int
@@ -47,18 +41,6 @@ type alias Model =
     , playerKeyPress : Maybe String
     , players : List Player
     , window : Window
-    }
-
-
-type alias Player =
-    { avatarUrl : String
-    , color : String
-    , direction : Direction
-    , id : Int
-    , name : String
-    , score : Int
-    , x : Int
-    , y : Int
     }
 
 
@@ -79,26 +61,7 @@ initialModel =
         , y = 400
         }
     , playerKeyPress = Nothing
-    , players =
-        [ { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-U03CTQU93-c88640d8b72a-512"
-          , color = "blue"
-          , direction = East
-          , id = 1
-          , name = "Bijan"
-          , score = 0
-          , x = 100
-          , y = 100
-          }
-        , { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-UENQJLJTS-83d6e8679c9d-512"
-          , color = "red"
-          , direction = East
-          , id = 1
-          , name = "Nick"
-          , score = 0
-          , x = 100
-          , y = 200
-          }
-        ]
+    , players = Player.playerData
     , window =
         { backgroundColor = "black"
         , x = 0
@@ -158,63 +121,67 @@ playerFoundItem item player =
 updatePlayerDirection : Maybe String -> Player -> Player
 updatePlayerDirection maybeKeyPress player =
     case ( player.direction, maybeKeyPress ) of
-        ( North, Just "ArrowLeft" ) ->
-            { player | direction = West }
+        ( Player.North, Just "ArrowLeft" ) ->
+            { player | direction = Player.West }
 
-        ( North, Just "ArrowRight" ) ->
-            { player | direction = East }
+        ( Player.North, Just "ArrowRight" ) ->
+            { player | direction = Player.East }
 
-        ( North, _ ) ->
+        ( Player.North, _ ) ->
             player
 
-        ( East, Just "ArrowLeft" ) ->
-            { player | direction = North }
+        ( Player.East, Just "ArrowLeft" ) ->
+            { player | direction = Player.North }
 
-        ( East, Just "ArrowRight" ) ->
-            { player | direction = South }
+        ( Player.East, Just "ArrowRight" ) ->
+            { player | direction = Player.South }
 
-        ( East, _ ) ->
+        ( Player.East, _ ) ->
             player
 
-        ( South, Just "ArrowLeft" ) ->
-            { player | direction = East }
+        ( Player.South, Just "ArrowLeft" ) ->
+            { player | direction = Player.East }
 
-        ( South, Just "ArrowRight" ) ->
-            { player | direction = West }
+        ( Player.South, Just "ArrowRight" ) ->
+            { player | direction = Player.West }
 
-        ( South, _ ) ->
+        ( Player.South, _ ) ->
             player
 
-        ( West, Just "ArrowLeft" ) ->
-            { player | direction = South }
+        ( Player.West, Just "ArrowLeft" ) ->
+            { player | direction = Player.South }
 
-        ( West, Just "ArrowRight" ) ->
-            { player | direction = North }
+        ( Player.West, Just "ArrowRight" ) ->
+            { player | direction = Player.North }
 
-        ( West, _ ) ->
+        ( Player.West, _ ) ->
             player
 
 
 updatePlayerPosition : Player -> Player
 updatePlayerPosition player =
     case player.direction of
-        North ->
+        Player.North ->
             { player | y = player.y - 1 }
 
-        East ->
+        Player.East ->
             { player | x = player.x + 1 }
 
-        South ->
+        Player.South ->
             { player | y = player.y + 1 }
 
-        West ->
+        Player.West ->
             { player | x = player.x - 1 }
+
 
 updatePlayerScore : Item -> Player -> Player
 updatePlayerScore item player =
     case playerFoundItem item player of
         True ->
-            { player | score = player.score + 1 }
+            { player
+                | score = player.score + 1
+                , width = player.width + 10
+            }
 
         False ->
             player
@@ -343,7 +310,7 @@ viewPlayer player =
         [ fill player.color
         , x <| String.fromInt player.x
         , y <| String.fromInt player.y
-        , width "10"
-        , height "10"
+        , width <| String.fromInt player.width
+        , height <| String.fromInt player.height
         ]
         []
