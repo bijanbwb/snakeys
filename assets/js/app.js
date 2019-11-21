@@ -17,8 +17,8 @@ import "phoenix_html"
 // import socket from "./socket"
 
 // Elm
-import { Elm } from "../elm/src/Main.elm"
+import { Elm } from "../elm/src/Snakeys.elm"
 
-Elm.Main.init({
+Elm.Snakeys.init({
   node: document.getElementById("elm-container")
 })
