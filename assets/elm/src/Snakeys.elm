@@ -180,7 +180,7 @@ updatePlayerScore item player =
         True ->
             { player
                 | score = player.score + 1
-                , width = player.width + 10
+                , width = player.width + 1
             }
 
         False ->
@@ -284,7 +284,6 @@ viewGameWindow window =
         , height <| String.fromInt window.height
         ]
         []
-
 
 
 viewItem : Item -> Svg msg
