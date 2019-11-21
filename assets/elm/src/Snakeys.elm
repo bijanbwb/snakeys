@@ -4,6 +4,7 @@ module Snakeys exposing (main)
 
 import Browser
 import Browser.Events
+import Color
 import Html exposing (Html)
 import Html.Attributes
 import Json.Decode
@@ -232,7 +233,7 @@ playersListItem : Player -> Html a
 playersListItem player =
     let
         colorBoxClasses =
-            "bg-" ++ player.color ++ "-400" ++ " border border-2 border-black h-4 inline-block mx-2 w-4"
+            "bg-" ++ Color.toString player.color ++ "-400" ++ " border border-2 border-black h-4 inline-block mx-2 w-4"
     in
     Html.li []
         [ Html.span [ Html.Attributes.class colorBoxClasses ]
@@ -306,7 +307,7 @@ viewPlayers players =
 viewPlayer : Player -> Svg msg
 viewPlayer player =
     rect
-        [ fill player.color
+        [ fill <| Color.toTailwindHex player.color
         , x <| String.fromInt player.x
         , y <| String.fromInt player.y
         , width <| String.fromInt player.width
