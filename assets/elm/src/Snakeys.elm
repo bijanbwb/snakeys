@@ -27,6 +27,11 @@ main =
 
 -- MODEL
 
+type Direction
+    = North
+    | East
+    | South
+    | West
 
 type alias Model =
     { playerKeyPress : Maybe String
@@ -38,6 +43,7 @@ type alias Model =
 type alias Player =
     { avatarUrl : String
     , color : String
+    , direction : Direction
     , id : Int
     , name : String
     , score : Int
@@ -61,6 +67,7 @@ initialModel =
     , players =
         [ { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-U03CTQU93-c88640d8b72a-512"
           , color = "blue"
+          , direction = East
           , id = 1
           , name = "Bijan"
           , score = 0
@@ -69,6 +76,7 @@ initialModel =
           }
         , { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-UENQJLJTS-83d6e8679c9d-512"
           , color = "red"
+          , direction = East
           , id = 1
           , name = "Nick"
           , score = 0
@@ -109,10 +117,9 @@ update msg model =
         GameLoop frame ->
             let
                 updatedPlayers =
-                    List.map updatePlayer model.players
-
-                updatePlayer player =
-                    { player | x = player.x + 1 }
+                    model.players
+                    |> List.map (updatePlayerDirection model.playerKeyPress)
+                    |> List.map updatePlayerPosition
             in
             ( { model | players = updatedPlayers }, Cmd.none )
 
@@ -126,7 +133,30 @@ update msg model =
             , Cmd.none
             )
 
+updatePlayerDirection : Maybe String -> Player -> Player
+updatePlayerDirection maybeKeyPress player =
+    case (player.direction, maybeKeyPress) of
+        (North, Just "ArrowLeft") -> { player | direction = West }
+        (North, Just "ArrowRight") -> { player | direction = East }
+        (North, _) -> player
+        (East, Just "ArrowLeft") -> { player | direction = North }
+        (East, Just "ArrowRight") -> { player | direction = South }
+        (East, _) -> player
+        (South, Just "ArrowLeft") -> { player | direction = East }
+        (South, Just "ArrowRight") -> { player | direction = West }
+        (South, _) -> player
+        (West, Just "ArrowLeft") -> { player | direction = South }
+        (West, Just "ArrowRight") -> { player | direction = North }
+        (West, _) -> player
 
+
+updatePlayerPosition : Player -> Player
+updatePlayerPosition player =
+    case player.direction of
+        North -> { player | x = player.y - 1 }
+        East -> { player | x = player.x + 1 }
+        South -> { player | x = player.y + 1 }
+        West -> { player | x = player.x - 1 }
 
 -- SUBSCRIPTIONS
 
