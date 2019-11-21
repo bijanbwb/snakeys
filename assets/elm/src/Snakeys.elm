@@ -35,8 +35,16 @@ type Direction
     | West
 
 
+type alias Item =
+    { color : String
+    , x : Int
+    , y : Int
+    }
+
+
 type alias Model =
-    { playerKeyPress : Maybe String
+    { item : Item
+    , playerKeyPress : Maybe String
     , players : List Player
     , window : Window
     }
@@ -65,7 +73,12 @@ type alias Window =
 
 initialModel : Model
 initialModel =
-    { playerKeyPress = Nothing
+    { item =
+        { color = "pink"
+        , x = 400
+        , y = 400
+        }
+    , playerKeyPress = Nothing
     , players =
         [ { avatarUrl = "https://ca.slack-edge.com/T02A50N5X-U03CTQU93-c88640d8b72a-512"
           , color = "blue"
@@ -122,6 +135,7 @@ update msg model =
                     model.players
                         |> List.map (updatePlayerDirection model.playerKeyPress)
                         |> List.map updatePlayerPosition
+                        |> List.map (updatePlayerScore model.item)
             in
             ( { model | players = updatedPlayers }, Cmd.none )
 
@@ -134,6 +148,11 @@ update msg model =
             ( { model | playerKeyPress = Nothing }
             , Cmd.none
             )
+
+
+playerFoundItem : Item -> Player -> Bool
+playerFoundItem item player =
+    player.x > item.x
 
 
 updatePlayerDirection : Maybe String -> Player -> Player
@@ -191,6 +210,15 @@ updatePlayerPosition player =
         West ->
             { player | x = player.x - 1 }
 
+updatePlayerScore : Item -> Player -> Player
+updatePlayerScore item player =
+    case playerFoundItem item player of
+        True ->
+            { player | score = player.score + 1 }
+
+        False ->
+            player
+
 
 
 -- SUBSCRIPTIONS
@@ -220,7 +248,7 @@ view model =
         [ Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
             [ Html.text "Snakey" ]
         , playersList model.players
-        , gameWindow model.players model.window
+        , gameWindow model.item model.players model.window
         ]
 
 
@@ -254,8 +282,8 @@ playersListItem player =
         ]
 
 
-gameWindow : List Player -> Window -> Svg a
-gameWindow players window =
+gameWindow : Item -> List Player -> Window -> Svg a
+gameWindow item players window =
     let
         viewBoxString =
             [ window.x
@@ -274,6 +302,7 @@ gameWindow players window =
             ]
             ([ viewGameWindow window ]
                 ++ viewPlayers players
+                ++ [ viewItem item ]
             )
         ]
 
@@ -286,6 +315,19 @@ viewGameWindow window =
         , y <| String.fromInt window.y
         , width <| String.fromInt window.width
         , height <| String.fromInt window.height
+        ]
+        []
+
+
+
+viewItem : Item -> Svg msg
+viewItem item =
+    rect
+        [ fill item.color
+        , x <| String.fromInt item.x
+        , y <| String.fromInt item.y
+        , width "10"
+        , height "10"
         ]
         []
 
