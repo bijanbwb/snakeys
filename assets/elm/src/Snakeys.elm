@@ -27,11 +27,13 @@ main =
 
 -- MODEL
 
+
 type Direction
     = North
     | East
     | South
     | West
+
 
 type alias Model =
     { playerKeyPress : Maybe String
@@ -118,8 +120,8 @@ update msg model =
             let
                 updatedPlayers =
                     model.players
-                    |> List.map (updatePlayerDirection model.playerKeyPress)
-                    |> List.map updatePlayerPosition
+                        |> List.map (updatePlayerDirection model.playerKeyPress)
+                        |> List.map updatePlayerPosition
             in
             ( { model | players = updatedPlayers }, Cmd.none )
 
@@ -133,30 +135,63 @@ update msg model =
             , Cmd.none
             )
 
+
 updatePlayerDirection : Maybe String -> Player -> Player
 updatePlayerDirection maybeKeyPress player =
-    case (player.direction, maybeKeyPress) of
-        (North, Just "ArrowLeft") -> { player | direction = West }
-        (North, Just "ArrowRight") -> { player | direction = East }
-        (North, _) -> player
-        (East, Just "ArrowLeft") -> { player | direction = North }
-        (East, Just "ArrowRight") -> { player | direction = South }
-        (East, _) -> player
-        (South, Just "ArrowLeft") -> { player | direction = East }
-        (South, Just "ArrowRight") -> { player | direction = West }
-        (South, _) -> player
-        (West, Just "ArrowLeft") -> { player | direction = South }
-        (West, Just "ArrowRight") -> { player | direction = North }
-        (West, _) -> player
+    case ( player.direction, maybeKeyPress ) of
+        ( North, Just "ArrowLeft" ) ->
+            { player | direction = West }
+
+        ( North, Just "ArrowRight" ) ->
+            { player | direction = East }
+
+        ( North, _ ) ->
+            player
+
+        ( East, Just "ArrowLeft" ) ->
+            { player | direction = North }
+
+        ( East, Just "ArrowRight" ) ->
+            { player | direction = South }
+
+        ( East, _ ) ->
+            player
+
+        ( South, Just "ArrowLeft" ) ->
+            { player | direction = East }
+
+        ( South, Just "ArrowRight" ) ->
+            { player | direction = West }
+
+        ( South, _ ) ->
+            player
+
+        ( West, Just "ArrowLeft" ) ->
+            { player | direction = South }
+
+        ( West, Just "ArrowRight" ) ->
+            { player | direction = North }
+
+        ( West, _ ) ->
+            player
 
 
 updatePlayerPosition : Player -> Player
 updatePlayerPosition player =
     case player.direction of
-        North -> { player | x = player.y - 1 }
-        East -> { player | x = player.x + 1 }
-        South -> { player | x = player.y + 1 }
-        West -> { player | x = player.x - 1 }
+        North ->
+            { player | y = player.y - 1 }
+
+        East ->
+            { player | x = player.x + 1 }
+
+        South ->
+            { player | y = player.y + 1 }
+
+        West ->
+            { player | x = player.x - 1 }
+
+
 
 -- SUBSCRIPTIONS
 
@@ -209,7 +244,8 @@ playersListItem player =
             []
         , Html.span [ Html.Attributes.class "inline-block mx-2" ]
             [ Html.img
-                [ Html.Attributes.class "h-4 w-4", Html.Attributes.src player.avatarUrl ] []
+                [ Html.Attributes.class "h-4 w-4", Html.Attributes.src player.avatarUrl ]
+                []
             ]
         , Html.span []
             [ Html.text player.name ]
