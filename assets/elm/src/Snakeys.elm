@@ -8,10 +8,14 @@ import Color
 import Direction
 import Html exposing (Html)
 import Html.Attributes
+import Item exposing (Item)
 import Json.Decode
 import Player exposing (Player)
+import Position exposing (Position)
+import Snake exposing (Snake)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Window exposing (Window)
 
 
 
@@ -31,13 +35,6 @@ main =
 -- MODEL
 
 
-type alias Item =
-    { color : String
-    , x : Int
-    , y : Int
-    }
-
-
 type alias Model =
     { items : List Item
     , playerKeyPress : Maybe String
@@ -46,36 +43,12 @@ type alias Model =
     }
 
 
-type alias Window =
-    { backgroundColor : String
-    , x : Int
-    , y : Int
-    , width : Int
-    , height : Int
-    }
-
-
 initialModel : Model
 initialModel =
-    { items =
-        [ { color = "pink"
-          , x = 400
-          , y = 400
-          }
-        , { color = "yellow"
-          , x = 500
-          , y = 500
-          }
-        ]
+    { items = Item.itemData
     , playerKeyPress = Nothing
     , players = Player.playerData
-    , window =
-        { backgroundColor = "black"
-        , x = 0
-        , y = 0
-        , width = 800
-        , height = 600
-        }
+    , window = Window.windowData
     }
 
 
@@ -121,7 +94,7 @@ playerFoundItem item player =
         offset =
             10
     in
-    (player.x == item.x + offset) || (player.x == item.x - offset)
+    (player.snake.head.x == item.position.x + offset) || (player.snake.head.x == item.position.x - offset)
 
 
 updateGameState : Model -> Model
@@ -139,44 +112,7 @@ updateItems model items =
 
 updateItemPosition : Item -> Item
 updateItemPosition item =
-    { item
-        | x = item.x + 1
-        , y = item.y - 1
-    }
-
-
-updatePlayerDirection : Maybe String -> Player -> Player
-updatePlayerDirection maybeKeyPress player =
-    case maybeKeyPress of
-        Just "ArrowUp" ->
-            { player | direction = Direction.Up }
-
-        Just "ArrowRight" ->
-            { player | direction = Direction.Right }
-
-        Just "ArrowDown" ->
-            { player | direction = Direction.Down }
-
-        Just "ArrowLeft" ->
-            { player | direction = Direction.Left }
-
-        _ ->
-            player
-
-updatePlayerPosition : Player -> Player
-updatePlayerPosition player =
-    case player.direction of
-        Direction.Up ->
-            { player | y = player.y - 1 }
-
-        Direction.Right ->
-            { player | x = player.x + 1 }
-
-        Direction.Down ->
-            { player | y = player.y + 1 }
-
-        Direction.Left ->
-            { player | x = player.x - 1 }
+    { item | position = { x = item.position.x + 1, y = item.position.y + 1 } }
 
 
 updatePlayerScore : Player -> Player
@@ -184,31 +120,64 @@ updatePlayerScore player =
     { player | score = player.score + 1 }
 
 
-updatePlayerSize : Player -> Player
-updatePlayerSize player =
-    case player.direction of
-        Direction.Up ->
-            { player | height = player.height + 1 }
-
-        Direction.Right ->
-            { player | width = player.width + 1 }
-
-        Direction.Down ->
-            { player | height = player.height + 1 }
-
-        Direction.Left ->
-            { player | width = player.width + 1 }
-
-
 updatePlayers : Model -> List Player -> List Player
 updatePlayers model players =
     players
         |> List.map
-            (updatePlayerDirection model.playerKeyPress
-                >> updatePlayerPosition
+            (updatePlayerSnake model.playerKeyPress
                 >> updatePlayerScore
-                >> updatePlayerSize
             )
+
+
+updatePlayerSnake : Maybe String -> Player -> Player
+updatePlayerSnake maybeKeyPress player =
+    { player
+        | snake =
+            player.snake
+                |> (updateSnakeHead
+                        >> updateSnakeDirection maybeKeyPress
+                   )
+    }
+
+
+updateSnakeDirection : Maybe String -> Snake -> Snake
+updateSnakeDirection maybeKeyPress snake =
+    case maybeKeyPress of
+        Just "ArrowUp" ->
+            { snake | direction = Direction.Up }
+
+        Just "ArrowRight" ->
+            { snake | direction = Direction.Right }
+
+        Just "ArrowDown" ->
+            { snake | direction = Direction.Down }
+
+        Just "ArrowLeft" ->
+            { snake | direction = Direction.Left }
+
+        _ ->
+            snake
+
+
+updateSnakeHead : Snake -> Snake
+updateSnakeHead snake =
+    { snake | head = updateSnakePosition snake }
+
+
+updateSnakePosition : Snake -> Position
+updateSnakePosition { direction, head } =
+    case direction of
+        Direction.Up ->
+            { head | y = head.y - 1 }
+
+        Direction.Right ->
+            { head | x = head.x + 1 }
+
+        Direction.Down ->
+            { head | y = head.y + 1 }
+
+        Direction.Left ->
+            { head | x = head.x - 1 }
 
 
 
@@ -319,8 +288,8 @@ viewItem : Item -> Svg msg
 viewItem item =
     rect
         [ fill item.color
-        , x <| String.fromInt item.x
-        , y <| String.fromInt item.y
+        , x <| String.fromInt item.position.x
+        , y <| String.fromInt item.position.y
         , width "10"
         , height "10"
         ]
@@ -336,9 +305,9 @@ viewPlayer : Player -> Svg msg
 viewPlayer player =
     rect
         [ fill <| Color.toTailwindHex player.color
-        , x <| String.fromInt player.x
-        , y <| String.fromInt player.y
-        , width <| String.fromInt player.width
-        , height <| String.fromInt player.height
+        , x <| String.fromInt player.snake.head.x
+        , y <| String.fromInt player.snake.head.y
+        , width "10"
+        , height "10"
         ]
         []
