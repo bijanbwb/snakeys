@@ -17,6 +17,7 @@ defmodule SnakeysWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    get "/start", PageController, :start
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,28 @@
+<div class="px-6">
+  <div class="mb-4">
+    <h1 class="font-black text-5xl">Snakeys</h1>
+    <p>🕹 A fun little game for remote teams.</p>
+  </div>
+
+  <div>
+    <div class="mb-4">
+      <h2 class="font-bold text-3xl">Get Started</h2>
+    </div>
+
+    <div class="w-full max-w-sm">
+      <form class="bg-white mb-4 pb-8 pt-6 px-8 rounded shadow-md">
+        <div class="mb-4">
+          <label class="block font-bold mb-2 text-gray-700 text-sm" for="nickname">
+            Nickname
+          </label>
+          <input class="appearance-none border focus:outline-none focus:shadow-outline leading-tight py-2 px-3 rounded shadow text-gray-700 w-full" id="nickname" placeholder="Enter a nickname to get started..." type="text"/>
+        </div>
+        <div>
+          <button class="bg-blue-500 focus:outline-none focus:shadow-outline font-bold hover:bg-blue-700 px-4 py-2 rounded text-white" type="button">
+            Start
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
