@@ -18,5 +18,8 @@ defmodule SnakeysWeb.Router do
 
     get "/", PageController, :index
     get "/start", PageController, :start
+    get "/game", PageController, :game
+    get "/game/:player_name", PageController, :game
+    post "/game/:player_name", PageController, :game
   end
 end

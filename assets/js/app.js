@@ -21,6 +21,4 @@ import { Elm } from "../elm/src/Snakeys.elm"
 
 let elmContainer = document.getElementById("elm-container")
 
-if (elmContainer) {
-  Elm.Snakeys.init({ node: elmContainer })
-}
+if (elmContainer) Elm.Snakeys.init({ node: elmContainer })

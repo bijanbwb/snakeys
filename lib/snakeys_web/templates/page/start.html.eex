@@ -8,19 +8,15 @@
     <h2 class="font-bold text-3xl">Get Started</h2>
 
     <div class="w-full max-w-sm">
-      <form class="bg-white mb-4 pb-8 pt-6 px-8 rounded shadow-md">
+      <%= form_for @conn, Routes.page_path(@conn, :game, :player_name), [class: "bg-white mb-4 pb-8 pt-6 px-8 rounded shadow-md"], fn f -> %>
         <div class="mb-4">
-          <label class="block font-bold mb-2 text-gray-700 text-sm" for="nickname">
-            Nickname
-          </label>
-          <input class="appearance-none border focus:outline-none focus:shadow-outline leading-tight py-2 px-3 rounded shadow text-gray-700 w-full" id="nickname" placeholder="Enter a nickname to get started..." type="text"/>
+          <%= label(f, :player_name, "Nickname", [class: "block font-bold mb-2 text-gray-700 text-sm"]) %>
+          <%= text_input(f, :player_name, [placeholder: "Enter a nickname to get started...", class: "appearance-none border focus:outline-none focus:shadow-outline leading-tight py-2 px-3 rounded shadow text-gray-700 w-full"]) %>
         </div>
         <div>
-          <button class="bg-blue-500 focus:outline-none focus:shadow-outline font-bold hover:bg-blue-700 px-4 py-2 rounded text-white" type="button">
-            Start
-          </button>
+          <%= submit("Start", [class: "bg-blue-500 focus:outline-none focus:shadow-outline font-bold hover:bg-blue-700 px-4 py-2 rounded text-white"]) %>
         </div>
-      </form>
+      <% end %>
     </div>
   </div>
 </div>

@@ -9,6 +9,11 @@ defmodule SnakeysWeb.PageController do
     render(conn, "start.html", player_token: generate_player_token(conn))
   end
 
+  def game(conn, params) do
+    IO.inspect(params, label: "GAME PARAMS")
+    render(conn, "game.html")
+  end
+
   defp generate_player_token(conn) do
     Phoenix.Token.sign(conn, "player_salt", generate_random_string(8))
   end
