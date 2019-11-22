@@ -14,11 +14,13 @@ import "phoenix_html"
 // Import local files
 //
 // Local files can be imported directly using relative paths, for example:
-// import socket from "./socket"
+import socket from "./socket"
 
 // Elm
 import { Elm } from "../elm/src/Snakeys.elm"
 
-Elm.Snakeys.init({
-  node: document.getElementById("elm-container")
-})
+let elmContainer = document.getElementById("elm-container")
+
+if (elmContainer) {
+  Elm.Snakeys.init({ node: elmContainer })
+}

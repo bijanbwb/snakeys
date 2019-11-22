@@ -19,9 +19,4 @@ defmodule SnakeysWeb.Router do
     get "/", PageController, :index
     get "/start", PageController, :start
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", SnakeysWeb do
-  #   pipe_through :api
-  # end
 end
