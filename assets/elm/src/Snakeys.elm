@@ -43,6 +43,12 @@ type alias Food =
     }
 
 
+type GameState
+    = StartScreen
+    | Playing
+    | GameOverScreen
+
+
 type alias Snakey =
     { x : Int
     , y : Int
@@ -56,6 +62,7 @@ type alias Model =
     -- , window : Window
     -- }
     { food : Food
+    , gameState : GameState
     , playerKeyPress : Maybe String
     , snakey : Snakey
     , window : Window
@@ -70,6 +77,7 @@ initialModel =
     -- , window = Window.windowData
     -- }
     { food = { x = 100, y = 100 }
+    , gameState = StartScreen
     , playerKeyPress = Nothing
     , snakey = { x = 10, y = 10 }
     , window = Window.windowData
@@ -116,7 +124,7 @@ update msg model =
                 )
 
             else
-                ( { model | snakey = updateSnakePosition model.playerKeyPress model.snakey }
+                ( { model | snakey = updateSnakePosition model.window model.playerKeyPress model.snakey }
                 , Cmd.none
                 )
 
@@ -237,20 +245,20 @@ roundFoodPositionToScale foodPositionInt =
         foodPositionInt // scale * scale
 
 
-updateSnakePosition : Maybe String -> Snakey -> Snakey
-updateSnakePosition maybeKeyPress snakey =
+updateSnakePosition : Window -> Maybe String -> Snakey -> Snakey
+updateSnakePosition window maybeKeyPress snakey =
     case maybeKeyPress of
         Just "ArrowUp" ->
-            { snakey | y = snakey.y - 10 }
+            { snakey | y = clamp (0 + scale) (window.height - scale) snakey.y - 10 }
 
         Just "ArrowRight" ->
-            { snakey | x = snakey.x + 10 }
+            { snakey | x = clamp (0 + scale) (window.width - 20) snakey.x + 10 }
 
         Just "ArrowDown" ->
-            { snakey | y = snakey.y + 10 }
+            { snakey | y = clamp (0 + scale) (window.height - 20) snakey.y + 10 }
 
         Just "ArrowLeft" ->
-            { snakey | x = snakey.x - 10 }
+            { snakey | x = clamp (0 + scale) (window.width - scale) snakey.x - 10 }
 
         _ ->
             snakey
@@ -332,7 +340,7 @@ view model =
             [ Html.text "Snakeys" ]
 
         -- , playersList model.players
-        , gameWindow model.snakey model.food model.window
+        , gameWindow model.snakey model.food model.gameState model.window
         ]
 
 
@@ -366,8 +374,8 @@ playersListItem player =
         ]
 
 
-gameWindow : Snakey -> Food -> Window -> Svg a
-gameWindow snakey food window =
+gameWindow : Snakey -> Food -> GameState -> Window -> Svg a
+gameWindow snakey food gameState window =
     let
         viewBoxString =
             [ window.x
@@ -387,6 +395,25 @@ gameWindow snakey food window =
             [ viewGameWindow window
             , viewSnakey snakey
             , viewFood food
+            , case gameState of
+                StartScreen ->
+                    let
+                        ( locationX, locationY ) =
+                            ( window.width // 2 - 100, window.height // 2 - 40 )
+                    in
+                    text_
+                        [ fill "white"
+                        , Html.Attributes.style "font-family" "Courier"
+                        , x <| String.fromInt locationX
+                        , y <| String.fromInt locationY
+                        ]
+                        [ text "Press SPACEBAR to start!" ]
+
+                Playing ->
+                    text_ [] []
+
+                GameOverScreen ->
+                    text_ [] [ text "Game Over" ]
             ]
         ]
 
