@@ -76,8 +76,8 @@ initialModel =
     }
 
 
-globalScale : Int
-globalScale =
+scale : Int
+scale =
     10
 
 
@@ -96,16 +96,23 @@ type Msg
     = GameLoop Float
     | PlayerPressedKeyDown String
     | PlayerPressedKeyUp String
-    | SpawnFoodX Int
+    | SpawnFood ( Int, Int )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GameLoop frame ->
+            let
+                randomX =
+                    Random.int scale (model.window.width - scale)
+
+                randomY =
+                    Random.int scale (model.window.height - scale)
+            in
             if model.snakey.x == model.food.x && model.snakey.y == model.food.y then
                 ( model
-                , Random.generate SpawnFoodX (Random.int globalScale (model.window.width - globalScale))
+                , Random.generate SpawnFood (Random.pair randomX randomY)
                 )
 
             else
@@ -123,8 +130,8 @@ update msg model =
             , Cmd.none
             )
 
-        SpawnFoodX newPositionX ->
-            ( { model | food = updateFoodPosition newPositionX model.food.y model.food }
+        SpawnFood ( x, y ) ->
+            ( { model | food = updateFoodPosition x y model.food }
             , Cmd.none
             )
 
@@ -217,17 +224,17 @@ updateFoodPosition : Int -> Int -> Food -> Food
 updateFoodPosition newX newY food =
     { food
         | x = roundFoodPositionToScale newX
-        , y = newY
+        , y = roundFoodPositionToScale newY
     }
 
 
 roundFoodPositionToScale : Int -> Int
 roundFoodPositionToScale foodPositionInt =
-    if modBy globalScale foodPositionInt == 0 then
+    if modBy scale foodPositionInt == 0 then
         foodPositionInt
 
     else
-        foodPositionInt // globalScale * globalScale
+        foodPositionInt // scale * scale
 
 
 updateSnakePosition : Maybe String -> Snakey -> Snakey
