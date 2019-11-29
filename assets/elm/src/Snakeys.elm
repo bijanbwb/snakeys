@@ -50,7 +50,8 @@ type GameState
 
 
 type alias Snakey =
-    { x : Int
+    { score : Int
+    , x : Int
     , y : Int
     }
 
@@ -79,7 +80,7 @@ initialModel =
     { food = { x = 100, y = 100 }
     , gameState = StartScreen
     , playerKeyPress = Nothing
-    , snakey = { x = 10, y = 10 }
+    , snakey = { score = 0, x = 10, y = 10 }
     , window = Window.windowData
     }
 
@@ -112,15 +113,23 @@ update msg model =
     case msg of
         GameLoop frame ->
             let
-                randomX =
+                randomGeneratorX =
                     Random.int scale (model.window.width - scale)
 
-                randomY =
+                randomGeneratorY =
                     Random.int scale (model.window.height - scale)
+
+                snakeyOutOfBounds x y =
+                    x == 0 || y == 0 || x == model.window.width - scale || y == model.window.height - scale
             in
             if model.snakey.x == model.food.x && model.snakey.y == model.food.y then
-                ( model
-                , Random.generate SpawnFood (Random.pair randomX randomY)
+                ( { model | snakey = incrementSnakeyScore model.snakey }
+                , Random.generate SpawnFood (Random.pair randomGeneratorX randomGeneratorY)
+                )
+
+            else if snakeyOutOfBounds model.snakey.x model.snakey.y then
+                ( { model | gameState = GameOverScreen }
+                , Cmd.none
                 )
 
             else
@@ -142,6 +151,11 @@ update msg model =
             ( { model | food = updateFoodPosition x y model.food }
             , Cmd.none
             )
+
+
+incrementSnakeyScore : Snakey -> Snakey
+incrementSnakeyScore snakey =
+    { snakey | score = snakey.score + 1 }
 
 
 
@@ -249,16 +263,16 @@ updateSnakePosition : Window -> Maybe String -> Snakey -> Snakey
 updateSnakePosition window maybeKeyPress snakey =
     case maybeKeyPress of
         Just "ArrowUp" ->
-            { snakey | y = clamp (0 + scale) (window.height - scale) snakey.y - 10 }
+            { snakey | y = snakey.y - scale }
 
         Just "ArrowRight" ->
-            { snakey | x = clamp (0 + scale) (window.width - 20) snakey.x + 10 }
+            { snakey | x = snakey.x + scale }
 
         Just "ArrowDown" ->
-            { snakey | y = clamp (0 + scale) (window.height - 20) snakey.y + 10 }
+            { snakey | y = snakey.y + scale }
 
         Just "ArrowLeft" ->
-            { snakey | x = clamp (0 + scale) (window.width - scale) snakey.x - 10 }
+            { snakey | x = snakey.x - scale }
 
         _ ->
             snakey
@@ -397,25 +411,26 @@ gameWindow snakey food gameState window =
             , viewFood food
             , case gameState of
                 StartScreen ->
-                    let
-                        ( locationX, locationY ) =
-                            ( window.width // 2 - 100, window.height // 2 - 40 )
-                    in
-                    text_
-                        [ fill "white"
-                        , Html.Attributes.style "font-family" "Courier"
-                        , x <| String.fromInt locationX
-                        , y <| String.fromInt locationY
-                        ]
-                        [ text "Press SPACEBAR to start!" ]
+                    viewText (window.width // 2 - 100) (window.height // 2 - 40) "Press SPACEBAR to start!"
 
                 Playing ->
                     text_ [] []
 
                 GameOverScreen ->
-                    text_ [] [ text "Game Over" ]
+                    viewText (window.width // 2 - 100) (window.height // 2 - 40) "☠️ Game Over. Press SPACEBAR to start over!"
             ]
         ]
+
+
+viewText : Int -> Int -> String -> Svg a
+viewText positionX positionY message =
+    text_
+        [ fill "white"
+        , Html.Attributes.style "font-family" "Courier"
+        , x <| String.fromInt positionX
+        , y <| String.fromInt positionY
+        ]
+        [ text message ]
 
 
 viewFood : Food -> Svg msg
