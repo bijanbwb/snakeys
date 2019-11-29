@@ -132,8 +132,20 @@ update msg model =
                 , Cmd.none
                 )
 
-            else
+            else if model.gameState == StartScreen then
+                if model.playerKeyPress == Just " " then
+                    ( { model | gameState = Playing }, Cmd.none )
+
+                else
+                    ( model, Cmd.none )
+
+            else if model.gameState == Playing then
                 ( { model | snakey = updateSnakePosition model.window model.playerKeyPress model.snakey }
+                , Cmd.none
+                )
+
+            else
+                ( model
                 , Cmd.none
                 )
 
