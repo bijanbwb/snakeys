@@ -12,6 +12,7 @@ import Item exposing (Item)
 import Json.Decode
 import Player exposing (Player)
 import Position exposing (Position)
+import Random
 import Snake exposing (Snake)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -22,6 +23,7 @@ import Window exposing (Window)
 -- MAIN
 
 
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
@@ -35,21 +37,48 @@ main =
 -- MODEL
 
 
+type alias Food =
+    { x : Int
+    , y : Int
+    }
+
+
+type alias Snakey =
+    { x : Int
+    , y : Int
+    }
+
+
 type alias Model =
-    { items : List Item
+    -- { items : List Item
+    -- , playerKeyPress : Maybe String
+    -- , players : List Player
+    -- , window : Window
+    -- }
+    { food : Food
     , playerKeyPress : Maybe String
-    , players : List Player
+    , snakey : Snakey
     , window : Window
     }
 
 
 initialModel : Model
 initialModel =
-    { items = Item.itemData
+    -- { items = Item.itemData
+    -- , playerKeyPress = Nothing
+    -- , players = Player.playerData
+    -- , window = Window.windowData
+    -- }
+    { food = { x = 100, y = 100 }
     , playerKeyPress = Nothing
-    , players = Player.playerData
+    , snakey = { x = 10, y = 10 }
     , window = Window.windowData
     }
+
+
+globalScale : Int
+globalScale =
+    10
 
 
 init : () -> ( Model, Cmd Msg )
@@ -67,15 +96,22 @@ type Msg
     = GameLoop Float
     | PlayerPressedKeyDown String
     | PlayerPressedKeyUp String
+    | SpawnFoodX Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GameLoop frame ->
-            ( updateGameState model
-            , Cmd.none
-            )
+            if model.snakey.x == model.food.x && model.snakey.y == model.food.y then
+                ( model
+                , Random.generate SpawnFoodX (Random.int globalScale (model.window.width - globalScale))
+                )
+
+            else
+                ( { model | snakey = updateSnakePosition model.playerKeyPress model.snakey }
+                , Cmd.none
+                )
 
         PlayerPressedKeyDown key ->
             ( { model | playerKeyPress = Just key }
@@ -87,37 +123,36 @@ update msg model =
             , Cmd.none
             )
 
+        SpawnFoodX newPositionX ->
+            ( { model | food = updateFoodPosition newPositionX model.food.y model.food }
+            , Cmd.none
+            )
 
-checkDirectionChange : Direction -> Snake -> Direction.Validity
-checkDirectionChange newDirection snake =
-    case snake.direction of
-        Direction.Up ->
-            if newDirection /= Direction.Down then
-                Direction.Valid
 
-            else
-                Direction.Invalid
 
-        Direction.Right ->
-            if newDirection /= Direction.Left then
-                Direction.Valid
-
-            else
-                Direction.Invalid
-
-        Direction.Down ->
-            if newDirection /= Direction.Up then
-                Direction.Valid
-
-            else
-                Direction.Invalid
-
-        Direction.Left ->
-            if newDirection /= Direction.Right then
-                Direction.Valid
-
-            else
-                Direction.Invalid
+-- checkDirectionChange : Direction -> Snake -> Direction.Validity
+-- checkDirectionChange newDirection snake =
+--     case snake.direction of
+--         Direction.Up ->
+--             if newDirection /= Direction.Down then
+--                 Direction.Valid
+--             else
+--                 Direction.Invalid
+--         Direction.Right ->
+--             if newDirection /= Direction.Left then
+--                 Direction.Valid
+--             else
+--                 Direction.Invalid
+--         Direction.Down ->
+--             if newDirection /= Direction.Up then
+--                 Direction.Valid
+--             else
+--                 Direction.Invalid
+--         Direction.Left ->
+--             if newDirection /= Direction.Right then
+--                 Direction.Valid
+--             else
+--                 Direction.Invalid
 
 
 playerFoundItem : Item -> Player -> Bool
@@ -129,12 +164,13 @@ playerFoundItem item player =
     (player.snake.head.x == item.position.x + offset) || (player.snake.head.x == item.position.x - offset)
 
 
-updateGameState : Model -> Model
-updateGameState model =
-    { model
-        | items = updateItems model model.items
-        , players = updatePlayers model model.players
-    }
+
+-- updateGameState : Model -> Model
+-- updateGameState model =
+--     { model
+--         | items = updateItems model model.items
+--         , players = updatePlayers model model.players
+--     }
 
 
 updateItems : Model -> List Item -> List Item
@@ -157,64 +193,60 @@ updatePlayerScore player =
     { player | score = player.score + 1 }
 
 
-updatePlayers : Model -> List Player -> List Player
-updatePlayers model players =
-    players
-        |> List.map
-            (updatePlayerSnake model.playerKeyPress
-                >> updatePlayerScore
-            )
+
+-- updatePlayers : Model -> List Player -> List Player
+-- updatePlayers model players =
+--     players
+--         |> List.map
+--             (updatePlayerSnake model.playerKeyPress
+--                 >> updatePlayerScore
+--             )
+-- updatePlayerSnake : Maybe String -> Player -> Player
+-- updatePlayerSnake maybeKeyPress player =
+--     { player
+--         | snake =
+--             player.snake
+--                 |> (updateSnakeHead
+--                         >> updateSnakeTail
+--                         >> updateSnakeDirection maybeKeyPress
+--                    )
+--     }
 
 
-updatePlayerSnake : Maybe String -> Player -> Player
-updatePlayerSnake maybeKeyPress player =
-    { player
-        | snake =
-            player.snake
-                |> (updateSnakeHead
-                        >> updateSnakeTail
-                        >> updateSnakeDirection maybeKeyPress
-                   )
+updateFoodPosition : Int -> Int -> Food -> Food
+updateFoodPosition newX newY food =
+    { food
+        | x = roundFoodPositionToScale newX
+        , y = newY
     }
 
 
-updateSnakeDirection : Maybe String -> Snake -> Snake
-updateSnakeDirection maybeKeyPress snake =
+roundFoodPositionToScale : Int -> Int
+roundFoodPositionToScale foodPositionInt =
+    if modBy globalScale foodPositionInt == 0 then
+        foodPositionInt
+
+    else
+        foodPositionInt // globalScale * globalScale
+
+
+updateSnakePosition : Maybe String -> Snakey -> Snakey
+updateSnakePosition maybeKeyPress snakey =
     case maybeKeyPress of
         Just "ArrowUp" ->
-            case checkDirectionChange Direction.Up snake of
-                Direction.Valid ->
-                    { snake | direction = Direction.Up }
-
-                Direction.Invalid ->
-                    snake
+            { snakey | y = snakey.y - 10 }
 
         Just "ArrowRight" ->
-            case checkDirectionChange Direction.Right snake of
-                Direction.Valid ->
-                    { snake | direction = Direction.Right }
-
-                Direction.Invalid ->
-                    snake
+            { snakey | x = snakey.x + 10 }
 
         Just "ArrowDown" ->
-            case checkDirectionChange Direction.Down snake of
-                Direction.Valid ->
-                    { snake | direction = Direction.Down }
-
-                Direction.Invalid ->
-                    snake
+            { snakey | y = snakey.y + 10 }
 
         Just "ArrowLeft" ->
-            case checkDirectionChange Direction.Left snake of
-                Direction.Valid ->
-                    { snake | direction = Direction.Left }
-
-                Direction.Invalid ->
-                    snake
+            { snakey | x = snakey.x - 10 }
 
         _ ->
-            snake
+            snakey
 
 
 updateSnakeHead : Snake -> Snake
@@ -291,8 +323,9 @@ view model =
     Html.div []
         [ Html.h1 [ Html.Attributes.class "font-black text-5xl" ]
             [ Html.text "Snakeys" ]
-        , playersList model.players
-        , gameWindow model.items model.players model.window
+
+        -- , playersList model.players
+        , gameWindow model.snakey model.food model.window
         ]
 
 
@@ -326,8 +359,8 @@ playersListItem player =
         ]
 
 
-gameWindow : List Item -> List Player -> Window -> Svg a
-gameWindow items players window =
+gameWindow : Snakey -> Food -> Window -> Svg a
+gameWindow snakey food window =
     let
         viewBoxString =
             [ window.x
@@ -344,11 +377,35 @@ gameWindow items players window =
             , width <| String.fromInt window.width
             , height <| String.fromInt window.height
             ]
-            ([ viewGameWindow window ]
-                ++ viewPlayers players
-                ++ viewItems items
-            )
+            [ viewGameWindow window
+            , viewSnakey snakey
+            , viewFood food
+            ]
         ]
+
+
+viewFood : Food -> Svg msg
+viewFood food =
+    rect
+        [ fill <| "red"
+        , x <| String.fromInt food.x
+        , y <| String.fromInt food.y
+        , width "10"
+        , height "10"
+        ]
+        []
+
+
+viewSnakey : Snakey -> Svg msg
+viewSnakey snakey =
+    rect
+        [ fill <| "green"
+        , x <| String.fromInt snakey.x
+        , y <| String.fromInt snakey.y
+        , width "10"
+        , height "10"
+        ]
+        []
 
 
 viewGameWindow : Window -> Svg msg
