@@ -50,17 +50,20 @@ type GameState
 
 
 type alias Snakey =
-    { score : Int
-    , x : Int
+    { body : List SnakeySegment
+    , score : Int
+    }
+
+
+type alias SnakeySegment =
+    { x : Int
     , y : Int
     }
 
 
 type alias Model =
     -- { items : List Item
-    -- , playerKeyPress : Maybe String
     -- , players : List Player
-    -- , window : Window
     -- }
     { food : Food
     , gameState : GameState
@@ -73,14 +76,15 @@ type alias Model =
 initialModel : Model
 initialModel =
     -- { items = Item.itemData
-    -- , playerKeyPress = Nothing
     -- , players = Player.playerData
-    -- , window = Window.windowData
     -- }
     { food = { x = 100, y = 100 }
     , gameState = StartScreen
     , playerKeyPress = Nothing
-    , snakey = { score = 0, x = 10, y = 10 }
+    , snakey =
+        { body = [ { x = 10, y = 10 } ]
+        , score = 0
+        }
     , window = Window.windowData
     }
 
@@ -119,15 +123,20 @@ update msg model =
                 randomGeneratorY =
                     Random.int scale (model.window.height - scale)
 
+                snakeyHead =
+                    model.snakey.body
+                        |> List.head
+                        |> Maybe.withDefault { x = 0, y = 0 }
+
                 snakeyOutOfBounds x y =
                     x == 0 || y == 0 || x == model.window.width - scale || y == model.window.height - scale
             in
-            if model.snakey.x == model.food.x && model.snakey.y == model.food.y then
-                ( { model | snakey = incrementSnakeyScore model.snakey }
+            if snakeyHead.x == model.food.x && snakeyHead.y == model.food.y then
+                ( { model | snakey = model.snakey |> growSnakey |> incrementSnakeyScore }
                 , Random.generate SpawnFood (Random.pair randomGeneratorX randomGeneratorY)
                 )
 
-            else if snakeyOutOfBounds model.snakey.x model.snakey.y then
+            else if snakeyOutOfBounds snakeyHead.x snakeyHead.y then
                 ( { model | gameState = GameOverScreen }
                 , Cmd.none
                 )
@@ -164,94 +173,20 @@ update msg model =
             , Cmd.none
             )
 
+growSnakey : Snakey -> Snakey
+growSnakey snakey =
+    let
+        updateBody body =
+            (snakey.body
+                |> List.head
+                |> Maybe.withDefault { x = 0, y = 0 }) :: [{x = 200, y = 200}]
+
+    in
+    { snakey | body = updateBody snakey.body }
 
 incrementSnakeyScore : Snakey -> Snakey
 incrementSnakeyScore snakey =
     { snakey | score = snakey.score + 1 }
-
-
-
--- checkDirectionChange : Direction -> Snake -> Direction.Validity
--- checkDirectionChange newDirection snake =
---     case snake.direction of
---         Direction.Up ->
---             if newDirection /= Direction.Down then
---                 Direction.Valid
---             else
---                 Direction.Invalid
---         Direction.Right ->
---             if newDirection /= Direction.Left then
---                 Direction.Valid
---             else
---                 Direction.Invalid
---         Direction.Down ->
---             if newDirection /= Direction.Up then
---                 Direction.Valid
---             else
---                 Direction.Invalid
---         Direction.Left ->
---             if newDirection /= Direction.Right then
---                 Direction.Valid
---             else
---                 Direction.Invalid
-
-
-playerFoundItem : Item -> Player -> Bool
-playerFoundItem item player =
-    let
-        offset =
-            10
-    in
-    (player.snake.head.x == item.position.x + offset) || (player.snake.head.x == item.position.x - offset)
-
-
-
--- updateGameState : Model -> Model
--- updateGameState model =
---     { model
---         | items = updateItems model model.items
---         , players = updatePlayers model model.players
---     }
-
-
-updateItems : Model -> List Item -> List Item
-updateItems model items =
-    List.map updateItemPosition items
-
-
-updateItemPosition : Item -> Item
-updateItemPosition item =
-    -- { item | position =
-    --     { x = item.position.x + 1
-    --     , y = item.position.y + 1
-    --     }
-    -- }
-    { item | position = item.position }
-
-
-updatePlayerScore : Player -> Player
-updatePlayerScore player =
-    { player | score = player.score + 1 }
-
-
-
--- updatePlayers : Model -> List Player -> List Player
--- updatePlayers model players =
---     players
---         |> List.map
---             (updatePlayerSnake model.playerKeyPress
---                 >> updatePlayerScore
---             )
--- updatePlayerSnake : Maybe String -> Player -> Player
--- updatePlayerSnake maybeKeyPress player =
---     { player
---         | snake =
---             player.snake
---                 |> (updateSnakeHead
---                         >> updateSnakeTail
---                         >> updateSnakeDirection maybeKeyPress
---                    )
---     }
 
 
 updateFoodPosition : Int -> Int -> Food -> Food
@@ -273,68 +208,27 @@ roundFoodPositionToScale foodPositionInt =
 
 updateSnakePosition : Window -> Maybe String -> Snakey -> Snakey
 updateSnakePosition window maybeKeyPress snakey =
+    let
+        head =
+            snakey.body
+                |> List.head
+                |> Maybe.withDefault { x = 0, y = 0 }
+    in
     case maybeKeyPress of
         Just "ArrowUp" ->
-            { snakey | y = snakey.y - scale }
+            { snakey | body = { head | y = head.y - scale } :: [] }
 
         Just "ArrowRight" ->
-            { snakey | x = snakey.x + scale }
+            { snakey | body = { head | x = head.x + scale } :: [] }
 
         Just "ArrowDown" ->
-            { snakey | y = snakey.y + scale }
+            { snakey | body = { head | y = head.y + scale } :: [] }
 
         Just "ArrowLeft" ->
-            { snakey | x = snakey.x - scale }
+            { snakey | body = { head | x = head.x - scale } :: [] }
 
         _ ->
             snakey
-
-
-updateSnakeHead : Snake -> Snake
-updateSnakeHead snake =
-    { snake | head = updateSnakeHeadPosition snake }
-
-
-updateSnakeTail : Snake -> Snake
-updateSnakeTail snake =
-    { snake | tail = updateSnakeTailPosition snake }
-
-
-updateSnakeHeadPosition : Snake -> Position
-updateSnakeHeadPosition { direction, head } =
-    case direction of
-        Direction.Up ->
-            { head | y = head.y - 2 }
-
-        Direction.Right ->
-            { head | x = head.x + 2 }
-
-        Direction.Down ->
-            { head | y = head.y + 2 }
-
-        Direction.Left ->
-            { head | x = head.x - 2 }
-
-
-updateSnakeTailPosition : Snake -> List Position
-updateSnakeTailPosition { direction, tail } =
-    List.map (updateSnakeTailSegment direction) tail
-
-
-updateSnakeTailSegment : Direction -> Position -> Position
-updateSnakeTailSegment direction tailSegment =
-    case direction of
-        Direction.Up ->
-            { tailSegment | y = tailSegment.y - 2 }
-
-        Direction.Right ->
-            { tailSegment | x = tailSegment.x + 2 }
-
-        Direction.Down ->
-            { tailSegment | y = tailSegment.y + 2 }
-
-        Direction.Left ->
-            { tailSegment | x = tailSegment.x - 2 }
 
 
 
@@ -418,8 +312,7 @@ gameWindow snakey food gameState window =
             , width <| String.fromInt window.width
             , height <| String.fromInt window.height
             ]
-            [ viewGameWindow window
-            , viewSnakey snakey
+            ([ viewGameWindow window
             , viewFood food
             , case gameState of
                 StartScreen ->
@@ -430,7 +323,7 @@ gameWindow snakey food gameState window =
 
                 GameOverScreen ->
                     viewText (window.width // 2 - 100) (window.height // 2 - 40) "☠️ Game Over. Press SPACEBAR to start over!"
-            ]
+            ] ++ viewSnakey snakey)
         ]
 
 
@@ -457,17 +350,21 @@ viewFood food =
         []
 
 
-viewSnakey : Snakey -> Svg msg
+viewSnakey : Snakey -> List (Svg msg)
 viewSnakey snakey =
+    List.map viewSnakeySegment snakey.body
+
+
+viewSnakeySegment : SnakeySegment -> Svg msg
+viewSnakeySegment snakeySegment =
     rect
         [ fill <| "green"
-        , x <| String.fromInt snakey.x
-        , y <| String.fromInt snakey.y
+        , x <| String.fromInt snakeySegment.x
+        , y <| String.fromInt snakeySegment.y
         , width "10"
         , height "10"
         ]
         []
-
 
 viewGameWindow : Window -> Svg msg
 viewGameWindow window =
